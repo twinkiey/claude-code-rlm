@@ -1,0 +1,48 @@
+# claude-code-rlm configuration
+# Copy this file to .claude-rlm.yaml in your project root
+# See: https://github.com/yourname/claude-code-rlm
+
+# ── Model Configuration ──
+backend: anthropic
+backend_kwargs:
+  model_name: claude-sonnet-4-20250514
+  # api_key: sk-...  # Or set ANTHROPIC_API_KEY env var
+
+# Worker model for sub-calls (optional, saves cost)
+# Uncomment to use a cheaper model for recursive sub-tasks:
+# other_backends:
+#   - anthropic
+# other_backend_kwargs:
+#   - model_name: claude-haiku-4-20250514
+
+# ── Limits ──
+max_depth: 2          # 1=no recursion, 2=one level of child RLMs
+max_iterations: 20    # Max REPL iterations per completion
+max_timeout: 120.0    # Seconds per completion
+max_errors: 3         # Consecutive REPL errors before abort
+# max_budget: 0.50    # USD per completion (needs cost-tracking backend)
+
+# ── Features ──
+persistent: true      # Keep REPL alive between queries (preserves variables)
+compaction: true      # Auto-summarize when context window fills up
+verbose: false        # Set true for debugging
+
+# ── Auto-trigger ──
+auto_trigger:
+  enabled: true
+  min_context_chars: 50000
+  min_file_lines: 5000
+  min_project_files: 50
+
+# ── Tools ──
+tools:
+  read_file: true
+  write_file: false     # Enable with caution
+  run_command: false    # Enable with caution
+  search_code: true
+  git_info: true
+  file_tree: true
+
+# ── Logging ──
+# Uncomment to save RLM trajectories for debugging:
+# log_dir: ~/.config/claude-rlm/logs

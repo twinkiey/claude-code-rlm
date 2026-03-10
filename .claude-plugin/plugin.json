@@ -1,0 +1,21 @@
+{
+  "name": "claude-code-rlm",
+  "version": "0.1.0",
+  "description": "Recursive Language Model plugin for Claude Code. Deep analysis of large codebases (100k+ lines) through recursive decomposition and programmatic context exploration.",
+  "author": {
+    "name": "Your Name",
+    "url": "https://github.com/yourname"
+  },
+  "repository": "https://github.com/yourname/claude-code-rlm",
+  "license": "MIT",
+  "keywords": [
+    "rlm",
+    "recursive",
+    "large-codebase",
+    "code-analysis",
+    "reasoning"
+  ],
+  "skills": "./skills/",
+  "hooks": "./hooks/hooks.json",
+  "mcpServers": "./.mcp.json"
+}

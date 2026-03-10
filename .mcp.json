@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "rlm": {
+      "command": "python3",
+      "args": [
+        "${CLAUDE_PLUGIN_ROOT}/python/mcp_server.py"
+      ],
+      "env": {
+        "RLM_PROJECT_ROOT": "${CLAUDE_PROJECT_DIR}",
+        "RLM_PLUGIN_ROOT": "${CLAUDE_PLUGIN_ROOT}"
+      }
+    }
+  }
+}
