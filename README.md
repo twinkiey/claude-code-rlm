@@ -10,7 +10,7 @@ of large codebases.
 ### Quick start
 
 ```bash
-git clone https://github.com/yourname/claude-code-rlm.git
+git clone https://github.com/twinkiey/claude-code-rlm.git
 cd claude-code-rlm && pip install -e .
 claude --plugin-dir ./claude-code-rlm
 ```
@@ -110,7 +110,7 @@ UserPromptSubmit hook (< 1 sec)
 ### Install
 
 ```bash
-git clone https://github.com/yourname/claude-code-rlm.git
+git clone https://github.com/twinkiey/claude-code-rlm.git
 cd claude-code-rlm
 pip install -e .
 ```
