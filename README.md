@@ -1,9 +1,3 @@
-```markdown
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://python.org)
-[![Claude Code Plugin](https://img.shields.io/badge/Claude_Code-Plugin-orange.svg)](https://docs.anthropic.com/en/docs/claude-code)
-[![Based on RLM](https://img.shields.io/badge/Based_on-RLM_Paper-green.svg)](https://arxiv.org/abs/2512.24601)
-
 # claude-code-rlm
 
 A [Claude Code](https://docs.anthropic.com/en/docs/claude-code) plugin that integrates
@@ -16,7 +10,7 @@ of large codebases.
 ### Quick start
 
 ```bash
-git clone https://github.com/yourname/claude-code-rlm.git
+git clone https://github.com/twinkiey/claude-code-rlm.git
 cd claude-code-rlm && pip install -e .
 claude --plugin-dir ./claude-code-rlm
 ```
@@ -116,7 +110,7 @@ UserPromptSubmit hook (< 1 sec)
 ### Install
 
 ```bash
-git clone https://github.com/yourname/claude-code-rlm.git
+git clone https://github.com/twinkiey/claude-code-rlm.git
 cd claude-code-rlm
 pip install -e .
 ```
