@@ -64,13 +64,10 @@ def main():
         # Also check project size
         if not decision["use_rlm"]:
             file_count = _quick_file_count(project_root)
-            if file_count > 50:
+            if file_count > 50 and decision["confidence"] > 0.4:
                 # Large project — lower threshold for trigger
-                decision2 = quick_classify(query)
-                if decision2["confidence"] > 0.4:
-                    decision = decision2
-                    decision["use_rlm"] = True
-                    decision["reason"] += f"; large project ({file_count} files)"
+                decision["use_rlm"] = True
+                decision["reason"] += f"; large project ({file_count} files)"
 
         if not decision["use_rlm"]:
             sys.exit(0)

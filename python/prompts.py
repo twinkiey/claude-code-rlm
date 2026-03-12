@@ -97,7 +97,6 @@ For finding specific code, definitions, or patterns:
 
 
 def build_cc_system_prompt(
-    tools_config: dict | None = None,
     custom_additions: str | None = None,
 ) -> str:
     """
@@ -107,7 +106,6 @@ def build_cc_system_prompt(
     RLM system prompt (which the library adds automatically).
 
     Args:
-        tools_config: dict of tool_name→enabled for dynamic prompt
         custom_additions: extra instructions from user config
 
     Returns:

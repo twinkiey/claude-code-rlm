@@ -286,7 +286,7 @@ def _make_git_info(project_root: str):
         if full_path is None:
             return f"Error: path '{path}' is outside project root"
 
-        cmd = f"blame {path}"
+        cmd = f"blame {full_path}"
         if end:
             cmd += f" -L {start},{end}"
         return _run_git(project_root, cmd)

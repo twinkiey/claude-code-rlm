@@ -31,9 +31,9 @@ class TestSafeResolve:
     """Test path safety validation."""
 
     def test_normal_path(self, fake_project: Path):
-    	result = _safe_resolve(str(fake_project), "src/index.ts")
-    	assert result is not None
-    	assert result.endswith(os.path.join("src", "index.ts"))
+        result = _safe_resolve(str(fake_project), "src/index.ts")
+        assert result is not None
+        assert result.endswith(os.path.join("src", "index.ts"))
 
     def test_dotdot_escape_blocked(self, fake_project: Path):
         result = _safe_resolve(str(fake_project), "../../etc/passwd")

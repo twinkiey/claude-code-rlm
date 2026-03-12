@@ -10,6 +10,7 @@ Loads and merges configuration from:
 Project config overrides global, which overrides defaults.
 """
 
+import copy
 import os
 import yaml
 from pathlib import Path
@@ -272,7 +273,7 @@ def load_config(project_root: str | None = None) -> RLMConfig:
     root = Path(project_root) if project_root else Path.cwd()
 
     # 1. Start with defaults
-    merged = DEFAULTS.copy()
+    merged = copy.deepcopy(DEFAULTS)
 
     # 2. Merge global config
     global_config = _load_yaml(GLOBAL_CONFIG_FILE)
