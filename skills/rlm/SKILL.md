@@ -11,6 +11,9 @@ allowed-tools:
   - Read
   - Grep
   - Glob
+  - mcp__rlm__rlm_analyze
+  - mcp__rlm__rlm_search
+  - mcp__rlm__rlm_status
 ---
 
 # RLM — Recursive Language Model Analysis

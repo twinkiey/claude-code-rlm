@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/scripts/classify-hook.py"
+            "command": "python ${CLAUDE_PLUGIN_ROOT}/scripts/classify-hook.py"
           }
         ]
       }
@@ -15,7 +15,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/scripts/precompact-hook.py"
+            "command": "python ${CLAUDE_PLUGIN_ROOT}/scripts/precompact-hook.py"
           }
         ]
       }
