@@ -230,6 +230,54 @@ class TestCreateDefaultConfig:
         assert isinstance(data, dict)
 
 
+class TestInjectEnvVarsLengthMismatch:
+    """Test that mismatched other_backends / other_backend_kwargs warns."""
+
+    def test_mismatched_lengths_warn(self, monkeypatch, capsys):
+        monkeypatch.setenv("OPENAI_API_KEY", "sk-oai")
+        config = {
+            "backend": "anthropic",
+            "backend_kwargs": {},
+            "other_backends": ["openai", "openai"],  # 2 backends
+            "other_backend_kwargs": [{"model_name": "gpt-4o"}],  # 1 kwargs
+        }
+        _inject_env_vars(config)
+        captured = capsys.readouterr()
+        assert "Warning" in captured.out
+        assert "other_backends" in captured.out
+
+    def test_matching_lengths_no_warn(self, monkeypatch, capsys):
+        monkeypatch.setenv("OPENAI_API_KEY", "sk-oai")
+        config = {
+            "backend": "anthropic",
+            "backend_kwargs": {},
+            "other_backends": ["openai"],
+            "other_backend_kwargs": [{"model_name": "gpt-4o"}],
+        }
+        _inject_env_vars(config)
+        captured = capsys.readouterr()
+        assert "Warning" not in captured.out
+
+
+class TestDictToConfigNoMutation:
+    """Test that _dict_to_config does not mutate its input."""
+
+    def test_input_not_mutated(self):
+        from python.config import _dict_to_config, DEFAULTS
+        import copy
+
+        data = copy.deepcopy(DEFAULTS)
+        data["project_root"] = "/tmp/test"
+        original_keys = set(data.keys())
+
+        _dict_to_config(data)
+
+        # Original dict should be unchanged
+        assert set(data.keys()) == original_keys
+        assert "auto_trigger" in data
+        assert "tools" in data
+
+
 class TestRLMConfig:
     """Test RLMConfig dataclass."""
 

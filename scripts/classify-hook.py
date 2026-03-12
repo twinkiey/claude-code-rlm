@@ -61,16 +61,13 @@ def main():
 
         decision = quick_classify(query)
 
-        # Also check project size
-        if not decision["use_rlm"]:
+        # Also check project size — activate RLM for large projects
+        # unless a bypass keyword explicitly matched
+        if not decision["use_rlm"] and "bypass" not in decision["reason"]:
             file_count = _quick_file_count(project_root)
             if file_count > 50:
-                # Large project — lower threshold for trigger
-                decision2 = quick_classify(query)
-                if decision2["confidence"] > 0.4:
-                    decision = decision2
-                    decision["use_rlm"] = True
-                    decision["reason"] += f"; large project ({file_count} files)"
+                decision["use_rlm"] = True
+                decision["reason"] += f"; large project ({file_count} files)"
 
         if not decision["use_rlm"]:
             sys.exit(0)

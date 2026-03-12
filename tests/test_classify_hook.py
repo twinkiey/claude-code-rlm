@@ -60,3 +60,28 @@ class TestQuickClassifyEdgeCases:
         assert isinstance(result["reason"], str)
         assert isinstance(result["confidence"], float)
         assert 0.0 <= result["confidence"] <= 1.0
+
+
+class TestBypassNotOverriddenByLargeProject:
+    """
+    Regression tests for the large-project logic in classify-hook.
+    Bypass decisions must NOT be overridden when a project is large.
+    """
+
+    def test_bypass_reason_contains_keyword(self):
+        """Bypass results must contain 'bypass' in reason so large-project
+        logic can identify and skip them."""
+        result = quick_classify("create a file to store data")
+        assert result["use_rlm"] is False
+        assert "bypass" in result["reason"]
+
+    def test_no_bypass_reason_does_not_contain_bypass(self):
+        """Non-bypass results should NOT contain 'bypass' in reason."""
+        result = quick_classify("how does the auth system work")
+        assert "bypass" not in result["reason"]
+
+    def test_short_query_reason_does_not_contain_bypass(self):
+        """Too-short queries should not be labelled as bypass."""
+        result = quick_classify("hi")
+        assert result["use_rlm"] is False
+        assert "bypass" not in result["reason"]

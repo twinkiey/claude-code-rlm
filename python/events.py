@@ -103,7 +103,7 @@ class EventEmitter:
     def rlm_start(self, query: str, context_size: int | None = None):
         self.emit(
             EventType.RLM_START,
-            query=query[:200],  # Truncate for event
+            query=str(query)[:200],  # Truncate for event
             context_size=context_size,
         )
 
@@ -185,7 +185,7 @@ class EventEmitter:
             EventType.SUBCALL_START,
             depth=depth,
             model=model,
-            preview=prompt_preview[:100],
+            preview=str(prompt_preview)[:100],
         )
 
     def _on_subcall_complete(

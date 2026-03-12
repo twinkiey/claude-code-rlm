@@ -63,6 +63,20 @@ class TestSafeResolve:
         except OSError:
             pytest.skip("Cannot create symlinks")
 
+    def test_case_normalization_same_prefix(self, fake_project: Path, tmp_path: Path):
+        """
+        Ensure a path that shares a case-variant prefix but is outside root
+        is correctly blocked. E.g., if root=/tmp/proj, /tmp/proj_other must be blocked.
+        """
+        # Create a sibling directory whose name starts with the same prefix
+        sibling = tmp_path / (fake_project.name + "_other")
+        sibling.mkdir(exist_ok=True)
+        secret = sibling / "secret.txt"
+        secret.write_text("secret")
+
+        result = _safe_resolve(str(fake_project), str(secret))
+        assert result is None
+
 
 class TestReadFile:
     """Test read_file tool."""

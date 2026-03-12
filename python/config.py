@@ -216,6 +216,12 @@ def _inject_env_vars(config: dict) -> dict:
     obk_list = config.get("other_backend_kwargs")
     ob_list = config.get("other_backends")
     if obk_list and ob_list:
+        if len(ob_list) != len(obk_list):
+            print(
+                f"[claude-code-rlm] Warning: other_backends ({len(ob_list)}) and "
+                f"other_backend_kwargs ({len(obk_list)}) have different lengths. "
+                f"Extra entries will be ignored."
+            )
         for i, (backend, kwargs) in enumerate(zip(ob_list, obk_list)):
             if "api_key" not in kwargs:
                 if backend == "anthropic":
@@ -232,6 +238,7 @@ def _inject_env_vars(config: dict) -> dict:
 
 def _dict_to_config(data: dict) -> RLMConfig:
     """Convert merged dict to RLMConfig dataclass."""
+    data = data.copy()  # Avoid mutating the caller's dict
 
     # Handle nested dataclasses
     auto_trigger_data = data.pop("auto_trigger", {})

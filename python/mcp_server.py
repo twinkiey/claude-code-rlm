@@ -107,7 +107,7 @@ def _get_or_create_rlm():
         custom_system_prompt=system_prompt,
         custom_tools=custom_tools,
         logger=logger,
-        verbose=False,
+        verbose=_rlm_config.verbose,
         **callbacks,
     )
 

@@ -358,8 +358,12 @@ def _safe_resolve(project_root: str, relative_path: str) -> str | None:
         root = os.path.realpath(project_root)
         full = os.path.realpath(os.path.join(root, relative_path))
 
+        # Normalize case on Windows (paths are case-insensitive)
+        root_norm = os.path.normcase(root)
+        full_norm = os.path.normcase(full)
+
         # Security check: resolved path must be within project root
-        if not full.startswith(root + os.sep) and full != root:
+        if not full_norm.startswith(root_norm + os.sep) and full_norm != root_norm:
             return None
 
         return full
