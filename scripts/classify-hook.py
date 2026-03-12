@@ -61,16 +61,17 @@ def main():
 
         decision = quick_classify(query)
 
-        # Also check project size
-        if not decision["use_rlm"]:
+        # Also check project size — promote borderline queries on large projects.
+        # Only applies when: (a) no bypass keyword matched, and (b) the query
+        # already has some trigger signal (confidence > 0.5, i.e. at least one
+        # trigger pattern matched). The "no triggers matched" default is 0.5, so
+        # the strict-greater check correctly excludes zero-match queries.
+        if not decision["use_rlm"] and "bypass" not in decision["reason"]:
             file_count = _quick_file_count(project_root)
-            if file_count > 50:
-                # Large project — lower threshold for trigger
-                decision2 = quick_classify(query)
-                if decision2["confidence"] > 0.4:
-                    decision = decision2
-                    decision["use_rlm"] = True
-                    decision["reason"] += f"; large project ({file_count} files)"
+            threshold = _get_project_file_threshold(project_root)
+            if file_count > threshold and decision["confidence"] > 0.5:
+                decision["use_rlm"] = True
+                decision["reason"] += f"; large project ({file_count} files)"
 
         if not decision["use_rlm"]:
             sys.exit(0)
@@ -90,6 +91,20 @@ def main():
 
     print(json.dumps(output))
     sys.exit(0)
+
+
+def _get_project_file_threshold(project_root: str) -> int:
+    """
+    Load the min_project_files threshold from project/global config.
+    Falls back to 50 (the built-in default) if config can't be loaded.
+    Kept fast by importing lazily and swallowing all errors.
+    """
+    try:
+        from python.config import load_config
+        config = load_config(project_root=project_root)
+        return config.auto_trigger.min_project_files
+    except Exception:
+        return 50  # built-in default
 
 
 def _quick_file_count(project_root: str, limit: int = 200) -> int:

@@ -7,6 +7,7 @@ the project's codebase.
 """
 
 import os
+import shlex
 import subprocess
 from pathlib import Path
 from typing import Any
@@ -286,7 +287,8 @@ def _make_git_info(project_root: str):
         if full_path is None:
             return f"Error: path '{path}' is outside project root"
 
-        cmd = f"blame {path}"
+        quoted_path = shlex.quote(path)
+        cmd = f"blame {quoted_path}"
         if end:
             cmd += f" -L {start},{end}"
         return _run_git(project_root, cmd)
@@ -446,15 +448,17 @@ def build_custom_tools(
             ),
         }
 
-        tools["list_files"] = {
-            "tool": _make_list_files(project_root),
-            "description": (
-                "List files in directory. "
-                "Args: directory (str, default '.'), "
-                "extension (str, optional, e.g. '.py'). "
-                "Returns list with sizes."
-            ),
-        }
+    # list_files uses only os.listdir — no external grep dependency.
+    # Always available regardless of whether search_code is enabled.
+    tools["list_files"] = {
+        "tool": _make_list_files(project_root),
+        "description": (
+            "List files in directory. "
+            "Args: directory (str, default '.'), "
+            "extension (str, optional, e.g. '.py'). "
+            "Returns list with sizes."
+        ),
+    }
 
     if tools_config.file_tree:
         tools["file_tree"] = {

@@ -134,6 +134,18 @@ class RLMBridge:
         if not self._initialized or not self._rlm:
             return {"status": "error", "error": "Not initialized"}
 
+        # Consult classifier unless caller explicitly forces RLM usage.
+        # This respects the auto_trigger config (enabled flag, bypass keywords,
+        # trigger keywords, thresholds) so callers get correct routing.
+        if not force and self._classifier is not None:
+            decision = self._classifier.should_use_rlm(query, context=context)
+            if not decision.use_rlm:
+                return {
+                    "status": "skipped",
+                    "reason": decision.reason,
+                    "confidence": decision.confidence,
+                }
+
         prompt = context if context else query
         root_prompt = query if context else None
 
