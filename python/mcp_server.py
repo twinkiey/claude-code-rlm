@@ -68,7 +68,9 @@ def _get_or_create_rlm():
     from rlm import RLM
     from rlm.logger import RLMLogger
 
-    project_root = os.environ.get("RLM_PROJECT_ROOT", os.getcwd())
+    project_root = os.environ.get("RLM_PROJECT_ROOT", "")
+    if not project_root or project_root.startswith("${"):
+        project_root = os.getcwd()
     _rlm_config = load_config(project_root=project_root)
 
     custom_tools = build_custom_tools(
