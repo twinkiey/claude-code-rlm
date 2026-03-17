@@ -93,34 +93,74 @@ class ClaudeCliLM(BaseLM):
     # ── CLI call ─────────────────────────────────────────────
 
     def _run_cli(self, prompt_str: str) -> str:
-        """Run 'claude -p' with prompt on stdin, return stdout."""
-        cmd = ["claude", "-p", "--output-format", "text"] + self.extra_args
+        """
+        Run 'claude -p <prompt>' and return the response.
+
+        Writes long prompts to a temp file to avoid OS argument length limits.
+        Short prompts are passed directly as CLI argument to avoid Windows
+        stdin-pipe TTY detection issues (claude may produce no stdout when
+        stdin is a non-TTY pipe).
+        """
+        import os
+        import tempfile
+
+        tmp_path = None
         try:
-            result = subprocess.run(
-                cmd,
-                input=prompt_str,
-                capture_output=True,
-                text=True,
-                timeout=self.timeout,
-            )
-        except subprocess.TimeoutExpired as e:
-            raise RuntimeError(
-                f"claude CLI timed out after {self.timeout}s"
-            ) from e
-        except FileNotFoundError as e:
-            raise RuntimeError(
-                "claude CLI not found in PATH. "
-                "Make sure Claude Code is installed: npm install -g @anthropic-ai/claude-code"
-            ) from e
+            if len(prompt_str) <= 2000:
+                cmd = ["claude", "-p", prompt_str] + self.extra_args
+            else:
+                with tempfile.NamedTemporaryFile(
+                    mode="w",
+                    suffix=".txt",
+                    delete=False,
+                    encoding="utf-8",
+                ) as f:
+                    f.write(prompt_str)
+                    tmp_path = f.name
+                cmd = ["claude", "-p", f"@{tmp_path}"] + self.extra_args
 
-        if result.returncode != 0:
-            err = result.stderr.strip() or "unknown error"
-            raise RuntimeError(f"claude CLI exited {result.returncode}: {err}")
+            try:
+                result = subprocess.run(
+                    cmd,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    timeout=self.timeout,
+                    encoding="utf-8",
+                    errors="replace",
+                )
+            except subprocess.TimeoutExpired as e:
+                raise RuntimeError(
+                    f"claude CLI timed out after {self.timeout}s"
+                ) from e
+            except FileNotFoundError as e:
+                raise RuntimeError(
+                    "claude CLI not found in PATH. "
+                    "Make sure Claude Code is installed: "
+                    "npm install -g @anthropic-ai/claude-code"
+                ) from e
 
-        output = result.stdout.strip()
-        import sys
-        print(f"[claude-cli] prompt_len={len(prompt_str)} output_len={len(output)} output_preview={output[:200]!r}", file=sys.stderr)
-        return output
+            stdout = (result.stdout or "").strip()
+            stderr = (result.stderr or "").strip()
+
+            if result.returncode != 0:
+                raise RuntimeError(
+                    f"claude CLI exited {result.returncode}: {stderr or 'unknown error'}"
+                )
+
+            if not stdout:
+                raise RuntimeError(
+                    f"claude CLI produced no output "
+                    f"(returncode={result.returncode}, stderr={stderr!r})"
+                )
+
+            return stdout
+
+        finally:
+            if tmp_path:
+                try:
+                    os.unlink(tmp_path)
+                except OSError:
+                    pass
 
     # ── BaseLM interface ─────────────────────────────────────
 
