@@ -96,18 +96,27 @@ class ClaudeCliLM(BaseLM):
         """
         Run 'claude -p <prompt>' and return the response.
 
-        Writes long prompts to a temp file to avoid OS argument length limits.
-        Short prompts are passed directly as CLI argument to avoid Windows
-        stdin-pipe TTY detection issues (claude may produce no stdout when
-        stdin is a non-TTY pipe).
+        Strategy:
+        - Short prompts (≤8000 chars): pass as direct CLI argument.
+          Avoids all stdin/TTY issues; confirmed working on Windows.
+        - Long prompts: write to temp file and use cmd.exe input
+          redirection ('claude -p < file'). cmd.exe opens the file
+          as a real file handle (not a Python pipe), which sidesteps
+          the Windows TTY-detection issue that causes claude to produce
+          no stdout when stdin is a Python subprocess PIPE.
         """
         import os
+        import sys
         import tempfile
+
+        # Windows command-line limit is ~8191 chars via cmd.exe; stay safe
+        _ARG_LIMIT = 8000
 
         tmp_path = None
         try:
-            if len(prompt_str) <= 2000:
+            if len(prompt_str) <= _ARG_LIMIT:
                 cmd = ["claude", "-p", prompt_str] + self.extra_args
+                shell = False
             else:
                 with tempfile.NamedTemporaryFile(
                     mode="w",
@@ -117,7 +126,12 @@ class ClaudeCliLM(BaseLM):
                 ) as f:
                     f.write(prompt_str)
                     tmp_path = f.name
-                cmd = ["claude", "-p", f"@{tmp_path}"] + self.extra_args
+
+                extra = " ".join(self.extra_args)
+                # cmd /c uses real file-handle redirection — claude sees a
+                # file on stdin, not a Python pipe, so stdout capture works.
+                cmd = ["cmd", "/c", f'claude -p {extra} < "{tmp_path}"']
+                shell = False
 
             try:
                 result = subprocess.run(
@@ -127,6 +141,7 @@ class ClaudeCliLM(BaseLM):
                     timeout=self.timeout,
                     encoding="utf-8",
                     errors="replace",
+                    shell=shell,
                 )
             except subprocess.TimeoutExpired as e:
                 raise RuntimeError(
