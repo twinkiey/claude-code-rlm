@@ -117,7 +117,10 @@ class ClaudeCliLM(BaseLM):
             err = result.stderr.strip() or "unknown error"
             raise RuntimeError(f"claude CLI exited {result.returncode}: {err}")
 
-        return result.stdout.strip()
+        output = result.stdout.strip()
+        import sys
+        print(f"[claude-cli] prompt_len={len(prompt_str)} output_len={len(output)} output_preview={output[:200]!r}", file=sys.stderr)
+        return output
 
     # ── BaseLM interface ─────────────────────────────────────
 

@@ -43,7 +43,7 @@ Use SHOW_VARS() to check what's available.
    `rlm_query()` to analyze sections:
    ```repl
    code = read_file("src/auth/handler.py")
-   analysis = llm_query(f"Analyze security issues in:\\n{code}")
+   analysis = llm_query(f"Analyze security issues in:\\n{{code}}")
    print(analysis)
    ```
 
@@ -63,17 +63,17 @@ For large projects, use a map-reduce approach:
    Process each file independently through `llm_query_batched()`:
    ```repl
    files = ["src/auth.py", "src/api.py", "src/models.py"]
-   prompts = [f"Analyze: {read_file(f)}" for f in files]
+   prompts = [f"Analyze: {{read_file(f)}}" for f in files]
    analyses = llm_query_batched(prompts)
    for f, a in zip(files, analyses):
-       print(f"=== {f} ===")
+       print(f"=== {{f}} ===")
        print(a[:500])
    ```
 
 2. **Reduce phase**: Synthesize partial analyses into a coherent answer:
    ```repl
-   combined = "\\n\\n".join(f"File {f}:\\n{a}" for f, a in zip(files, analyses))
-   final = llm_query(f"Synthesize these analyses into a report:\\n{combined}")
+   combined = "\\n\\n".join(f"File {{f}}:\\n{{a}}" for f, a in zip(files, analyses))
+   final = llm_query(f"Synthesize these analyses into a report:\\n{{combined}}")
    FINAL_VAR("final")
    ```
 
