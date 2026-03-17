@@ -113,10 +113,14 @@ class ClaudeCliLM(BaseLM):
         _ARG_LIMIT = 8000
 
         tmp_path = None
+        stdin_src = None
         try:
+            # MCP server's stdin is the MCP protocol pipe from Claude Code.
+            # Any subprocess that inherits it will read MCP JSON instead of
+            # our prompt and hang. We must always override stdin explicitly.
             if len(prompt_str) <= _ARG_LIMIT:
                 cmd = ["claude", "-p", prompt_str] + self.extra_args
-                shell = False
+                stdin_src = subprocess.DEVNULL
             else:
                 with tempfile.NamedTemporaryFile(
                     mode="w",
@@ -126,22 +130,18 @@ class ClaudeCliLM(BaseLM):
                 ) as f:
                     f.write(prompt_str)
                     tmp_path = f.name
-
-                extra = " ".join(self.extra_args)
-                # cmd /c uses real file-handle redirection — claude sees a
-                # file on stdin, not a Python pipe, so stdout capture works.
-                cmd = ["cmd", "/c", f'claude -p {extra} < "{tmp_path}"']
-                shell = False
+                cmd = ["claude", "-p"] + self.extra_args
+                stdin_src = open(tmp_path, "r", encoding="utf-8")
 
             try:
                 result = subprocess.run(
                     cmd,
+                    stdin=stdin_src,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                     timeout=self.timeout,
                     encoding="utf-8",
                     errors="replace",
-                    shell=shell,
                 )
             except subprocess.TimeoutExpired as e:
                 raise RuntimeError(
@@ -171,6 +171,11 @@ class ClaudeCliLM(BaseLM):
             return stdout
 
         finally:
+            if isinstance(stdin_src, object) and hasattr(stdin_src, "close"):
+                try:
+                    stdin_src.close()
+                except Exception:
+                    pass
             if tmp_path:
                 try:
                     os.unlink(tmp_path)
