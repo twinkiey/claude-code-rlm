@@ -29,10 +29,13 @@ _cli_backend_registered = False
 
 def _register_cli_backend() -> None:
     """
-    Monkey-patch rlm.clients.get_client to support 'claude-cli' backend.
+    Monkey-patch get_client wherever rlms imports it, to support 'claude-cli'.
 
-    Called lazily — only when config uses backend: claude-cli.
-    Guard ensures the patch is applied at most once per process.
+    rlm/core/rlm.py does 'from rlm.clients import get_client', creating a
+    local reference. Patching rlm.clients alone is not enough — we must also
+    patch the name in every module that already imported it.
+
+    Called lazily. Guard ensures the patch is applied at most once per process.
     """
     global _cli_backend_registered
     if _cli_backend_registered:
@@ -48,7 +51,15 @@ def _register_cli_backend() -> None:
             return ClaudeCliLM(**(backend_kwargs or {}))
         return _original_get_client(backend, backend_kwargs)
 
+    # Patch the source module
     _rlm_clients.get_client = _patched_get_client
+
+    # Patch local references in modules that already imported get_client
+    import sys
+    for _mod in sys.modules.values():
+        if getattr(_mod, "get_client", None) is _original_get_client:
+            _mod.get_client = _patched_get_client
+
     _cli_backend_registered = True
 
 
