@@ -22,6 +22,35 @@ from .tools import build_custom_tools
 from .events import EventEmitter
 from .prompts import build_cc_system_prompt
 
+# ── CLI backend registration ───────────────────────────────
+
+_cli_backend_registered = False
+
+
+def _register_cli_backend() -> None:
+    """
+    Monkey-patch rlm.clients.get_client to support 'claude-cli' backend.
+
+    Called lazily — only when config uses backend: claude-cli.
+    Guard ensures the patch is applied at most once per process.
+    """
+    global _cli_backend_registered
+    if _cli_backend_registered:
+        return
+
+    import rlm.clients as _rlm_clients
+    from .cli_backend import ClaudeCliLM
+
+    _original_get_client = _rlm_clients.get_client
+
+    def _patched_get_client(backend: str, backend_kwargs: dict) -> Any:
+        if backend == "claude-cli":
+            return ClaudeCliLM(**(backend_kwargs or {}))
+        return _original_get_client(backend, backend_kwargs)
+
+    _rlm_clients.get_client = _patched_get_client
+    _cli_backend_registered = True
+
 
 class RLMBridge:
     """
@@ -81,6 +110,14 @@ class RLMBridge:
             logger = RLMLogger(
                 log_dir=self._config.log_dir,
             ) if self._config.log_dir else RLMLogger()
+
+            # Register CLI backend if needed (idempotent)
+            _needs_cli = (
+                self._config.backend == "claude-cli"
+                or "claude-cli" in (self._config.other_backends or [])
+            )
+            if _needs_cli:
+                _register_cli_backend()
 
             self._rlm = RLM(
                 backend=self._config.backend,

@@ -73,6 +73,15 @@ def _get_or_create_rlm():
         project_root = os.getcwd()
     _rlm_config = load_config(project_root=project_root)
 
+    # Register CLI backend if needed
+    _needs_cli = (
+        _rlm_config.backend == "claude-cli"
+        or "claude-cli" in (_rlm_config.other_backends or [])
+    )
+    if _needs_cli:
+        from python.bridge import _register_cli_backend
+        _register_cli_backend()
+
     custom_tools = build_custom_tools(
         project_root=_rlm_config.project_root,
         tools_config=_rlm_config.tools,
